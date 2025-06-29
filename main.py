@@ -19,8 +19,6 @@
 #  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #  SOFTWARE
-
-
 import os
 from config import Config
 from pyrogram import Client, idle
@@ -29,42 +27,46 @@ import tgcrypto
 from pyromod import listen
 from logging.handlers import RotatingFileHandler
 
+# Setup logger
 LOGGER = logging.getLogger(__name__)
 logging.basicConfig(
     level=logging.INFO,
     format="%(name)s - %(message)s",
     datefmt="%d-%b-%y %H:%M:%S",
     handlers=[
-        RotatingFileHandler(
-            "log.txt", maxBytes=5000000, backupCount=10
-        ),
+        RotatingFileHandler("log.txt", maxBytes=5000000, backupCount=10),
         logging.StreamHandler(),
     ],
 )
 
 # Auth Users
-AUTH_USERS = [ int(chat) for chat in Config.AUTH_USERS.split(",") if chat != '']
+AUTH_USERS = [int(chat) for chat in Config.AUTH_USERS.split(",") if chat.strip().isdigit()]
 
-# Prefixes 
+# Command prefixes (if needed in plugins)
 prefixes = ["/", "~", "?", "!"]
 
+# Load plugins
 plugins = dict(root="plugins")
-if __name__ == "__main__" :
-    bot = Client(
-        "StarkBot",
-        bot_token=os.environ.get("BOT_TOKEN"),
-        api_id=int(os.environ.get("API_ID")),
-        api_hash=os.environ.get("API_HASH"),
-        sleep_threshold=20,
-        plugins=plugins,
-        workers = 50
-    )
-    
-    async def main():
-        await bot.start()
-        bot_info  = await bot.get_me()
-        LOGGER.info(f"<--- @{bot_info.username} Started (c) STARKBOT --->")
-        await idle()
-    
-    asyncio.get_event_loop().run_until_complete(main())
+
+# Initialize the bot in BOT TOKEN MODE (important change: name=None)
+bot = Client(
+    name=None,  # ✅ prevents .session file
+    bot_token=os.environ.get("BOT_TOKEN"),
+    api_id=int(os.environ.get("API_ID")),
+    api_hash=os.environ.get("API_HASH"),
+    sleep_threshold=20,
+    plugins=plugins,
+    workers=50
+)
+
+# Main start routine
+async def main():
+    await bot.start()
+    bot_info = await bot.get_me()
+    LOGGER.info(f"<--- @{bot_info.username} Started (c) STARKBOT --->")
+    await idle()
     LOGGER.info(f"<---Bot Stopped-->")
+
+# Run main loop
+if __name__ == "__main__":
+    asyncio.get_event_loop().run_until_complete(main())
